@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 PickListDbUtility.addDatabaseEntry(input.getText().toString(), mDb);
+                                mPickListAdapter.swapCursor(PickListDbUtility.getPartnumbersForPickListAdapter(mDb));
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
