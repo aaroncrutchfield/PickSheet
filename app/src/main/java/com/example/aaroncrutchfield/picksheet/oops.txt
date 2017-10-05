@@ -1,0 +1,29 @@
+public static int getTotalQuantity(String partnumber, SQLiteDatabase db) {
+        int totalQuantity = 0;
+        String[] columns = {PickListDbContract.PickListEntry.COLUMN_CONTAINER_QUANTITY,
+                PickListDbContract.PickListEntry.COLUMN_PACK_QUANTITY};
+        String whereArgument = PickListDbContract.PickListEntry.COLUMN_PARTNUMBER + "='" + partnumber + "'";
+
+        try {
+            //Order by partnumber
+            Cursor cursor = db.query(PickListDbContract.PickListEntry.PICK_LIST_TABLE,
+                    columns,
+                    whereArgument,
+                    null,
+                    null,
+                    null,
+                    PickListDbContract.PickListEntry.COLUMN_PARTNUMBER);
+            Log.d(TAG, "getTotalQuantity.rowCount: " + cursor.getCount());
+            while (cursor.moveToNext()) {
+                int numberOfContainers = cursor.getInt(0);
+                int packQuantity = cursor.getInt(1);
+                totalQuantity += numberOfContainers * packQuantity;
+            }
+            cursor.close();
+        } catch (SQLException | NullPointerException e) {
+            Log.e(TAG, "getPartnumberEntries: ", e);
+        }
+
+        Log.d(TAG, "getTotalQuantity() totalQuantity: " + totalQuantity);
+        return totalQuantity;
+    }

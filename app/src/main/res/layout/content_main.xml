@@ -32,7 +32,7 @@
         android:textStyle="bold"
         android:layout_marginStart="16dp"
         tools:layout_constraintBottom_creator="1"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerView3"
+        app:layout_constraintBottom_toTopOf="@+id/rv_pickList"
         tools:layout_constraintLeft_creator="1"
         android:layout_marginBottom="13dp"
         app:layout_constraintLeft_toLeftOf="parent" />
@@ -46,7 +46,7 @@
         android:textStyle="bold"
         android:layout_marginStart="30dp"
         tools:layout_constraintBottom_creator="1"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerView3"
+        app:layout_constraintBottom_toTopOf="@+id/rv_pickList"
         tools:layout_constraintLeft_creator="1"
         android:layout_marginBottom="14dp"
         app:layout_constraintLeft_toLeftOf="@+id/tv_last_operation" />
@@ -61,10 +61,16 @@
         android:layout_marginEnd="52dp"
         tools:layout_constraintRight_creator="1"
         tools:layout_constraintBottom_creator="1"
-        app:layout_constraintBottom_toTopOf="@+id/recyclerView3"
-        app:layout_constraintRight_toRightOf="@+id/recyclerView3"
-        android:layout_marginBottom="13dp"
-        android:layout_marginRight="62dp" />
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/rv_pickList"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="8dp"
+        app:layout_constraintVertical_bias="0.912"
+        android:layout_marginRight="77dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintHorizontal_bias="0.853" />
 
     <TextView
         android:id="@+id/tv_last_operation"
@@ -93,7 +99,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/guideline6"
-        app:layout_constraintGuide_begin="284dp"
+        app:layout_constraintGuide_begin="279dp"
         android:orientation="vertical" />
 
     <android.support.constraint.Guideline
@@ -106,7 +112,7 @@
         tools:layout_editor_absoluteX="16dp" />
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/recyclerView3"
+        android:id="@+id/rv_pickList"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="60dp"
