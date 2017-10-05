@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -54,23 +55,14 @@ public class MainActivity extends AppCompatActivity {
     private void promptForNewPartnumber() {
         final EditText input = new EditText(this);
         // TODO: 10/4/17 Create autocomplete input editText
+        formatInputField(input);
         AlertDialog.Builder newPartPrompt =
                 new AlertDialog.Builder(this)
                         .setTitle("Enter New Partnumber")
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                String partnumber = input.getText().toString();
-                                long rowId = PickListDbUtility.addDatabaseEntry(partnumber, mDb);
-                                String message = "";
-
-                                if (rowId != -1) {
-                                    mPickListAdapter.swapCursor(PickListDbUtility.getPartnumbersForPickListAdapter(mDb));
-                                    message = partnumber + " was added";
-                                } else {
-                                    message = partnumber + " already exists";
-                                }
-                                Toast.makeText(getBaseContext(), message, Toast.LENGTH_SHORT).show();
+                                processInput(input);
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -83,6 +75,45 @@ public class MainActivity extends AppCompatActivity {
 
         newPartPrompt.setView(input);
         newPartPrompt.show();
+    }
+
+    /**
+     * Convenience method to add part number into the database or notify if the part number already
+     * exists
+     * @param input the EditText containing the input String
+     */
+    private void processInput(EditText input) {
+        String partnumber = input.getText().toString();
+        long rowId = PickListDbUtility.addDatabaseEntry(partnumber, mDb);
+        String message = "";
+
+        if (rowId != -1) {
+            mPickListAdapter.swapCursor(PickListDbUtility.getPartnumbersForPickListAdapter(mDb));
+            message = partnumber + " was added";
+        } else {
+            message = partnumber + " already exists";
+        }
+        Toast.makeText(getBaseContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Convenience method for setting an onKeyListener for the Enter key on the input EditText
+     * @param input the EditText to set the onKeyListener on
+     */
+    private void formatInputField(final EditText input) {
+        input.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int i, KeyEvent keyEvent) {
+                if (i == KeyEvent.KEYCODE_ENTER || i == KeyEvent.KEYCODE_NUMPAD_ENTER) {
+                    if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                        processInput(input);
+                        input.setText("");
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
     }
 
     /**
