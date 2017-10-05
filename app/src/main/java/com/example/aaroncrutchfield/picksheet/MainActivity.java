@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.example.aaroncrutchfield.picksheet.data.PickListDbHelper;
 import com.example.aaroncrutchfield.picksheet.data.PickListDbUtility;
@@ -59,14 +60,24 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                PickListDbUtility.addDatabaseEntry(input.getText().toString(), mDb);
-                                mPickListAdapter.swapCursor(PickListDbUtility.getPartnumbersForPickListAdapter(mDb));
+                                String partnumber = input.getText().toString();
+                                long rowId = PickListDbUtility.addDatabaseEntry(partnumber, mDb);
+                                String message = "";
+
+                                if (rowId != -1) {
+                                    mPickListAdapter.swapCursor(PickListDbUtility.getPartnumbersForPickListAdapter(mDb));
+                                    message = partnumber + " was added";
+                                } else {
+                                    message = partnumber + " already exists";
+                                }
+                                Toast.makeText(getBaseContext(), message, Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 dialogInterface.cancel();
+                                Toast.makeText(getBaseContext(), "Cancelled", Toast.LENGTH_SHORT).show();
                             }
                         });
 
