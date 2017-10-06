@@ -1,8 +1,11 @@
 package com.example.aaroncrutchfield.picksheet;
 
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -19,8 +22,12 @@ import android.widget.Toast;
 import com.example.aaroncrutchfield.picksheet.data.PickListDbHelper;
 import com.example.aaroncrutchfield.picksheet.data.PickListDbUtility;
 
+import java.util.ArrayList;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity {
 
+    private static final int SPEECH_INPUT_REQUEST = 65461;
     private SQLiteDatabase mDb;
     private PickListAdapter mPickListAdapter;
 
@@ -47,6 +54,54 @@ public class MainActivity extends AppCompatActivity {
                 promptForNewPartnumber();
             }
         });
+
+
+        fab.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                requestSpeechInput();
+                return false;
+            }
+        });
+    }
+
+    /**
+     * Convenience method for adding a part number to the database via speech recognition
+     */
+    private void requestSpeechInput() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
+                "Say the part number");
+        try{
+            startActivityForResult(intent, SPEECH_INPUT_REQUEST);
+        } catch (ActivityNotFoundException e){
+
+        }
+    }
+
+    /**
+     * Returns data from the speech RecognizerIntent
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case SPEECH_INPUT_REQUEST:
+                if (resultCode == RESULT_OK && null != data){
+                    ArrayList<String> result = data
+                            .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    //ADD PART TO DATABASE
+                    String partnumber = result.get(0).replaceAll("\\s", "").toUpperCase();
+                    processInput(partnumber);
+                }
+        }
     }
 
     /**
@@ -62,7 +117,8 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                processInput(input);
+                                String partnumber = input.getText().toString();
+                                processInput(partnumber);
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -80,10 +136,9 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Convenience method to add part number into the database or notify if the part number already
      * exists
-     * @param input the EditText containing the input String
+     * @param partnumber
      */
-    private void processInput(EditText input) {
-        String partnumber = input.getText().toString();
+    private void processInput(String partnumber) {
         long rowId = PickListDbUtility.addDatabaseEntry(partnumber, mDb);
         String message = "";
 
@@ -106,7 +161,8 @@ public class MainActivity extends AppCompatActivity {
             public boolean onKey(View view, int i, KeyEvent keyEvent) {
                 if (i == KeyEvent.KEYCODE_ENTER || i == KeyEvent.KEYCODE_NUMPAD_ENTER) {
                     if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                        processInput(input);
+                        String partnumber = input.getText().toString();
+                        processInput(partnumber);
                         input.setText("");
                         return true;
                     }
