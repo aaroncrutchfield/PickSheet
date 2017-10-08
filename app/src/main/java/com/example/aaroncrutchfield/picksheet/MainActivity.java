@@ -24,6 +24,8 @@ import com.example.aaroncrutchfield.picksheet.data.PickListDbUtility;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                promptForNewPartnumber();
+                promptForNewPartnumber("");
             }
         });
 
@@ -99,21 +101,53 @@ public class MainActivity extends AppCompatActivity {
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     //ADD PART TO DATABASE
                     String partnumber = result.get(0).replaceAll("\\s", "").toUpperCase();
-                    processInput(partnumber);
+                    if (validateSpeechInput(partnumber))
+                        processInput(partnumber);
+                    else
+                        promptForNewPartnumber(partnumber);
                 }
+        }
+    }
+
+    private boolean validateSpeechInput(String partnumber) {
+        //ex: 26666-A-000 -or- 308330-H-030
+        Pattern digitsWithSuffix = Pattern.compile("\\d{5,6}-\\w-\\d{3}");
+
+        //ex: 6776 -or- 26580 -or- 305456
+        Pattern digitsWithoutSuffix = Pattern.compile("\\d{4,6}");
+
+        //ex: box -or- misc parts
+        Pattern word = Pattern.compile("\\D{3,}");
+
+        if (digitsWithSuffix.matcher(partnumber).matches()) {
+            return true;
+        } else if (digitsWithoutSuffix.matcher(partnumber).matches()){
+            return true;
+        } else if ( word.matcher(partnumber).matches()){
+            return true;
+        } else {
+            return false;
         }
     }
 
     /**
      * Creates an AlertDialog to prompt for a part number that will be entered into the database
      */
-    private void promptForNewPartnumber() {
+    private void promptForNewPartnumber(String partnumber) {
         final EditText input = new EditText(this);
         // TODO: 10/4/17 Create autocomplete input editText
         formatInputField(input);
-        AlertDialog.Builder newPartPrompt =
-                new AlertDialog.Builder(this)
-                        .setTitle("Enter New Partnumber")
+        AlertDialog.Builder newPartPrompt = new AlertDialog.Builder(this);
+        String title;
+        if (!partnumber.equals("")){
+            title = "Did you mean...?";
+            //append moves the cursor to the end of the text
+            input.append(partnumber);
+        } else {
+            title = "Enter a new part number";
+        }
+
+        newPartPrompt.setTitle(title)
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
@@ -139,14 +173,23 @@ public class MainActivity extends AppCompatActivity {
      * @param partnumber
      */
     private void processInput(String partnumber) {
-        long rowId = PickListDbUtility.addDatabaseEntry(partnumber, mDb);
+        long rowId;
         String message = "";
 
-        if (rowId != -1) {
+        if (validateSpeechInput(partnumber)) {
+            rowId = PickListDbUtility.addDatabaseEntry(partnumber, mDb);
+        } else {
+            rowId = -2;
+        }
+
+        if (rowId > 0) {
             mPickListAdapter.swapCursor(PickListDbUtility.getPartnumbersForPickListAdapter(mDb));
             message = partnumber + " was added";
+        } else if (rowId == -2) {
+            message = "Please enter a valid input";
+            promptForNewPartnumber(partnumber);
         } else {
-            message = partnumber + " already exists";
+                message = partnumber + " already exists";
         }
         Toast.makeText(getBaseContext(), message, Toast.LENGTH_SHORT).show();
     }
